@@ -485,6 +485,7 @@ const $$ = s => Array.from(document.querySelectorAll(s));
 const pad = n => String(n).padStart(2,'0');
 const today = () => { const d = new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
 const fmtDate = iso => iso ? iso.split('-').reverse().join('/') : '';
+const fmtDateFolder = iso => iso ? iso.split('-').reverse().join('-') : ''; // dd-mm-yyyy, safe for folder names
 const toMin = t => { if(!t) return null; const p = t.split(':').map(Number); return p[0]*60+p[1]; };
 const span = (a,b) => (a==null||b==null) ? null : (((b-a)%1440)+1440)%1440;
 const hh = min => (min/60).toFixed(2).replace('.',',');
@@ -723,7 +724,7 @@ $('#makeBtn').onclick = async () => {
   try{
     const {bytes, warnings} = await buildPdf(PDFLib, b64ToBytes(BLANK_B64), d, sig);
     const pdfName = 'Werkfiche_' + safe(d.sso) + '_' + d.datum_iso + '.pdf';
-    const folder = 'Daily ' + d.datum_iso + '/' + safe(d.sso);
+    const folder = 'DBL ' + fmtDateFolder(d.datum_iso) + '/' + fmtDateFolder(d.datum_iso) + ' ' + safe(d.sso);
     const pdfBlob = new Blob([bytes], {type:'application/pdf'});
 
     const zip = new JSZip(); const root = zip.folder(folder);
@@ -744,7 +745,7 @@ $('#makeBtn').onclick = async () => {
     last_result = {pdfBlob, pdfName, zipBlob, zipName, shareFiles, viewUrl: URL.createObjectURL(pdfBlob)};
 
     const c = calc();
-    $('#resPath').textContent = 'Daily ' + d.datum_iso + ' \u203A ' + safe(d.sso);
+    $('#resPath').textContent = 'DBL ' + fmtDateFolder(d.datum_iso) + ' \u203A ' + fmtDateFolder(d.datum_iso) + ' ' + safe(d.sso);
     $('#resInfo').textContent = 'Contains ' + pdfName + ' and ' + (photos.voor.length+photos.na.length) + ' photo(s). ' +
       'On site: ' + (c.work==null?'\u2013':hh(c.work)+' u') + ' \u2022 km: ' + (c.km?dec(c.km):'\u2013') + '. Saved in the Hours, km & invoice tab.';
     $('#viewPdf').href = last_result.viewUrl;
@@ -941,8 +942,8 @@ async function calendarInsertEvent(event){
 async function gUploadWerkfiche(d, c, pdfBlob, pdfName, photosByGroup){
   const token = await gEnsureToken();
   const st = gSettings();
-  const dailyName = 'Daily ' + d.datum_iso;
-  const subName = d.datum_iso + ' ' + safe(d.sso);
+  const dailyName = 'DBL ' + fmtDateFolder(d.datum_iso);
+  const subName = fmtDateFolder(d.datum_iso) + ' ' + safe(d.sso);
   const dailyId = await driveFindOrCreateFolder(dailyName, st.gParentFolder || null);
   const subId = await driveFindOrCreateFolder(subName, dailyId);
   await driveUploadFile(subId, pdfName, pdfBlob);
